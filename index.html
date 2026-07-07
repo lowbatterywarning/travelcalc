@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel Calculator - Trip Cost Estimator</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>&#x2708;&#xFE0F; Travel Calculator</h1>
+      <p class="subtitle">Estimate trip costs using real road distances and GSA per diem rates</p>
+    </header>
+
+    <main>
+      <!-- Form Card -->
+      <section class="card" id="formCard">
+        <h2 class="card-title">Trip Details</h2>
+        <form id="tripForm" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="startAddress">Starting Address <span class="required">*</span></label>
+              <input type="text" id="startAddress" placeholder="123 Main St, Los Angeles, CA" autocomplete="off">
+              <span class="error-msg" id="startAddressError"></span>
+            </div>
+            <div class="form-group">
+              <label for="endAddress">Destination Address <span class="required">*</span></label>
+              <input type="text" id="endAddress" placeholder="456 Park Ave, New York, NY" autocomplete="off">
+              <span class="error-msg" id="endAddressError"></span>
+            </div>
+          </div>
+
+          <div class="form-row form-row-three">
+            <div class="form-group">
+              <label for="startDate">Start Date <span class="required">*</span></label>
+              <input type="date" id="startDate">
+              <span class="error-msg" id="startDateError"></span>
+            </div>
+            <div class="form-group">
+              <label for="endDate">End Date <span class="required">*</span></label>
+              <input type="date" id="endDate">
+              <span class="error-msg" id="endDateError"></span>
+            </div>
+            <div class="form-group">
+              <label for="ratePerMile">Rate per Mile ($)</label>
+              <input type="number" id="ratePerMile" value="0.70" min="0.01" step="0.01">
+              <span class="error-msg" id="rateError"></span>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="calculateBtn">
+              <span class="btn-text">Calculate</span>
+              <span class="spinner hidden" id="btnSpinner"></span>
+            </button>
+          </div>
+        </form>
+
+        <div class="global-error hidden" id="globalError"></div>
+      </section>
+
+      <!-- Results Section (hidden until calculation) -->
+      <section class="results hidden" id="resultsSection">
+        <!-- Trip Summary -->
+        <div class="card" id="summaryCard">
+          <h2 class="card-title">Trip Summary</h2>
+          <div class="summary-grid" id="summaryGrid"></div>
+          <div class="disclaimer-notes" id="disclaimerNotes"></div>
+        </div>
+
+        <!-- Cost Breakdown -->
+        <div class="card" id="costCard">
+          <h2 class="card-title">Cost Breakdown</h2>
+          <div class="cost-table" id="costTable"></div>
+        </div>
+
+        <!-- Route Map -->
+        <div class="card" id="mapCard">
+          <h2 class="card-title">Route Map</h2>
+          <div id="map"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="results-actions">
+          <button class="btn btn-primary" id="downloadPdfBtn">
+            &#x1F4E5; Download PDF Report
+          </button>
+          <button class="btn btn-secondary" id="newCalcBtn">
+            &#x1F504; New Calculation
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Powered by OpenStreetMap, OSRM, and GSA FY2025 per diem rates. For estimation purposes only.</p>
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>

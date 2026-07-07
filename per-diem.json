@@ -1,0 +1,284 @@
+{
+  "fiscalYear": 2025,
+  "standardRate": {
+    "lodging": 110,
+    "meals": 68
+  },
+  "locations": {
+    "AL": [
+      { "city": "Birmingham", "county": "Jefferson", "lodging": 116, "meals": 69 },
+      { "city": "Mobile", "county": "Mobile", "lodging": 113, "meals": 69 },
+      { "city": "Montgomery", "county": "Montgomery", "lodging": 114, "meals": 69 },
+      { "city": "Huntsville", "county": "Madison", "lodging": 117, "meals": 69 },
+      { "city": "Gulf Shores", "county": "Baldwin", "lodging": 128, "meals": 69, "seasonStart": "05-01", "seasonEnd": "09-30", "seasonLodging": 165, "seasonMeals": 69 }
+    ],
+    "AK": [
+      { "city": "Anchorage", "county": "Anchorage", "lodging": 132, "meals": 74 },
+      { "city": "Fairbanks", "county": "Fairbanks North Star", "lodging": 127, "meals": 72 },
+      { "city": "Juneau", "county": "Juneau", "lodging": 151, "meals": 76 },
+      { "city": "Ketchikan", "county": "Ketchikan Gateway", "lodging": 142, "meals": 74 }
+    ],
+    "AZ": [
+      { "city": "Phoenix", "county": "Maricopa", "lodging": 125, "meals": 69 },
+      { "city": "Scottsdale", "county": "Maricopa", "lodging": 125, "meals": 69 },
+      { "city": "Tucson", "county": "Pima", "lodging": 118, "meals": 69 },
+      { "city": "Sedona", "county": "Yavapai", "lodging": 144, "meals": 74, "seasonStart": "03-01", "seasonEnd": "05-31", "seasonLodging": 169, "seasonMeals": 74 },
+      { "city": "Flagstaff", "county": "Coconino", "lodging": 126, "meals": 69 }
+    ],
+    "AR": [
+      { "city": "Little Rock", "county": "Pulaski", "lodging": 114, "meals": 69 },
+      { "city": "Fayetteville", "county": "Washington", "lodging": 112, "meals": 69 }
+    ],
+    "CA": [
+      { "city": "Los Angeles", "county": "Los Angeles", "lodging": 182, "meals": 74 },
+      { "city": "San Francisco", "county": "San Francisco", "lodging": 259, "meals": 79 },
+      { "city": "San Diego", "county": "San Diego", "lodging": 171, "meals": 74 },
+      { "city": "Sacramento", "county": "Sacramento", "lodging": 145, "meals": 74 },
+      { "city": "San Jose", "county": "Santa Clara", "lodging": 259, "meals": 79 },
+      { "city": "Oakland", "county": "Alameda", "lodging": 259, "meals": 79 },
+      { "city": "Monterey", "county": "Monterey", "lodging": 160, "meals": 69 },
+      { "city": "Napa", "county": "Napa", "lodging": 201, "meals": 86 },
+      { "city": "Santa Barbara", "county": "Santa Barbara", "lodging": 171, "meals": 74 },
+      { "city": "Palm Springs", "county": "Riverside", "lodging": 139, "meals": 74, "seasonStart": "12-01", "seasonEnd": "04-30", "seasonLodging": 182, "seasonMeals": 74 },
+      { "city": "South Lake Tahoe", "county": "El Dorado", "lodging": 127, "meals": 69, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 178, "seasonMeals": 74 },
+      { "city": "Fresno", "county": "Fresno", "lodging": 125, "meals": 69 },
+      { "city": "Anaheim", "county": "Orange", "lodging": 182, "meals": 74 },
+      { "city": "Long Beach", "county": "Los Angeles", "lodging": 182, "meals": 74 }
+    ],
+    "CO": [
+      { "city": "Denver", "county": "Denver", "lodging": 150, "meals": 69 },
+      { "city": "Boulder", "county": "Boulder", "lodging": 146, "meals": 69 },
+      { "city": "Colorado Springs", "county": "El Paso", "lodging": 132, "meals": 69 },
+      { "city": "Aspen", "county": "Pitkin", "lodging": 142, "meals": 74, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 229, "seasonMeals": 79 },
+      { "city": "Vail", "county": "Eagle", "lodging": 138, "meals": 74, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 245, "seasonMeals": 79 },
+      { "city": "Telluride", "county": "San Miguel", "lodging": 135, "meals": 74, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 210, "seasonMeals": 79 }
+    ],
+    "CT": [
+      { "city": "Hartford", "county": "Hartford", "lodging": 128, "meals": 69 },
+      { "city": "New Haven", "county": "New Haven", "lodging": 126, "meals": 69 },
+      { "city": "Stamford", "county": "Fairfield", "lodging": 152, "meals": 74 }
+    ],
+    "DC": [
+      { "city": "Washington", "county": "District of Columbia", "lodging": 225, "meals": 79 }
+    ],
+    "DE": [
+      { "city": "Wilmington", "county": "New Castle", "lodging": 124, "meals": 69 },
+      { "city": "Rehoboth Beach", "county": "Sussex", "lodging": 132, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 199, "seasonMeals": 74 }
+    ],
+    "FL": [
+      { "city": "Miami", "county": "Miami-Dade", "lodging": 176, "meals": 74, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 234, "seasonMeals": 79 },
+      { "city": "Orlando", "county": "Orange", "lodging": 128, "meals": 69 },
+      { "city": "Tampa", "county": "Hillsborough", "lodging": 135, "meals": 69 },
+      { "city": "Jacksonville", "county": "Duval", "lodging": 122, "meals": 69 },
+      { "city": "Fort Lauderdale", "county": "Broward", "lodging": 155, "meals": 74, "seasonStart": "12-01", "seasonEnd": "04-30", "seasonLodging": 199, "seasonMeals": 74 },
+      { "city": "Key West", "county": "Monroe", "lodging": 197, "meals": 79, "seasonStart": "12-15", "seasonEnd": "04-15", "seasonLodging": 282, "seasonMeals": 79 },
+      { "city": "Naples", "county": "Collier", "lodging": 138, "meals": 74, "seasonStart": "12-01", "seasonEnd": "04-30", "seasonLodging": 210, "seasonMeals": 79 },
+      { "city": "West Palm Beach", "county": "Palm Beach", "lodging": 149, "meals": 74, "seasonStart": "12-01", "seasonEnd": "04-30", "seasonLodging": 200, "seasonMeals": 74 },
+      { "city": "Panama City", "county": "Bay", "lodging": 118, "meals": 69, "seasonStart": "05-01", "seasonEnd": "08-31", "seasonLodging": 166, "seasonMeals": 69 }
+    ],
+    "GA": [
+      { "city": "Atlanta", "county": "Fulton", "lodging": 142, "meals": 74 },
+      { "city": "Savannah", "county": "Chatham", "lodging": 128, "meals": 69 },
+      { "city": "Augusta", "county": "Richmond", "lodging": 115, "meals": 69 }
+    ],
+    "HI": [
+      { "city": "Honolulu", "county": "Honolulu", "lodging": 220, "meals": 79 },
+      { "city": "Maui", "county": "Maui", "lodging": 245, "meals": 82 },
+      { "city": "Kona", "county": "Hawaii", "lodging": 193, "meals": 76 },
+      { "city": "Kauai", "county": "Kauai", "lodging": 206, "meals": 79 }
+    ],
+    "ID": [
+      { "city": "Boise", "county": "Ada", "lodging": 120, "meals": 69 },
+      { "city": "Sun Valley", "county": "Blaine", "lodging": 131, "meals": 69, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 188, "seasonMeals": 74 }
+    ],
+    "IL": [
+      { "city": "Chicago", "county": "Cook", "lodging": 171, "meals": 74 },
+      { "city": "Springfield", "county": "Sangamon", "lodging": 114, "meals": 69 },
+      { "city": "Peoria", "county": "Peoria", "lodging": 112, "meals": 69 }
+    ],
+    "IN": [
+      { "city": "Indianapolis", "county": "Marion", "lodging": 126, "meals": 69 },
+      { "city": "Fort Wayne", "county": "Allen", "lodging": 112, "meals": 69 }
+    ],
+    "KS": [
+      { "city": "Wichita", "county": "Sedgwick", "lodging": 113, "meals": 69 },
+      { "city": "Kansas City", "county": "Wyandotte", "lodging": 128, "meals": 69 }
+    ],
+    "KY": [
+      { "city": "Louisville", "county": "Jefferson", "lodging": 120, "meals": 69 },
+      { "city": "Lexington", "county": "Fayette", "lodging": 118, "meals": 69 }
+    ],
+    "LA": [
+      { "city": "New Orleans", "county": "Orleans", "lodging": 148, "meals": 74 },
+      { "city": "Baton Rouge", "county": "East Baton Rouge", "lodging": 119, "meals": 69 }
+    ],
+    "MA": [
+      { "city": "Boston", "county": "Suffolk", "lodging": 246, "meals": 79 },
+      { "city": "Cambridge", "county": "Middlesex", "lodging": 246, "meals": 79 },
+      { "city": "Worcester", "county": "Worcester", "lodging": 126, "meals": 69 },
+      { "city": "Cape Cod", "county": "Barnstable", "lodging": 138, "meals": 74, "seasonStart": "06-01", "seasonEnd": "09-30", "seasonLodging": 195, "seasonMeals": 79 },
+      { "city": "Nantucket", "county": "Nantucket", "lodging": 155, "meals": 76, "seasonStart": "06-01", "seasonEnd": "09-30", "seasonLodging": 279, "seasonMeals": 82 },
+      { "city": "Martha's Vineyard", "county": "Dukes", "lodging": 148, "meals": 76, "seasonStart": "06-01", "seasonEnd": "09-30", "seasonLodging": 265, "seasonMeals": 82 }
+    ],
+    "MD": [
+      { "city": "Baltimore", "county": "Baltimore", "lodging": 145, "meals": 74 },
+      { "city": "Annapolis", "county": "Anne Arundel", "lodging": 135, "meals": 74 },
+      { "city": "Bethesda", "county": "Montgomery", "lodging": 225, "meals": 79 },
+      { "city": "Ocean City", "county": "Worcester", "lodging": 128, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 202, "seasonMeals": 74 }
+    ],
+    "ME": [
+      { "city": "Portland", "county": "Cumberland", "lodging": 131, "meals": 69 },
+      { "city": "Bar Harbor", "county": "Hancock", "lodging": 125, "meals": 69, "seasonStart": "07-01", "seasonEnd": "09-15", "seasonLodging": 198, "seasonMeals": 74 }
+    ],
+    "MI": [
+      { "city": "Detroit", "county": "Wayne", "lodging": 128, "meals": 69 },
+      { "city": "Grand Rapids", "county": "Kent", "lodging": 118, "meals": 69 },
+      { "city": "Traverse City", "county": "Grand Traverse", "lodging": 122, "meals": 69, "seasonStart": "06-01", "seasonEnd": "09-15", "seasonLodging": 165, "seasonMeals": 69 }
+    ],
+    "MN": [
+      { "city": "Minneapolis", "county": "Hennepin", "lodging": 142, "meals": 74 },
+      { "city": "Saint Paul", "county": "Ramsey", "lodging": 142, "meals": 74 },
+      { "city": "Rochester", "county": "Olmsted", "lodging": 122, "meals": 69 }
+    ],
+    "MO": [
+      { "city": "St. Louis", "county": "St. Louis", "lodging": 131, "meals": 69 },
+      { "city": "Kansas City", "county": "Jackson", "lodging": 128, "meals": 69 },
+      { "city": "Branson", "county": "Taney", "lodging": 115, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 138, "seasonMeals": 69 }
+    ],
+    "MS": [
+      { "city": "Jackson", "county": "Hinds", "lodging": 112, "meals": 69 },
+      { "city": "Biloxi", "county": "Harrison", "lodging": 114, "meals": 69 }
+    ],
+    "MT": [
+      { "city": "Billings", "county": "Yellowstone", "lodging": 116, "meals": 69 },
+      { "city": "Bozeman", "county": "Gallatin", "lodging": 126, "meals": 69, "seasonStart": "06-01", "seasonEnd": "09-30", "seasonLodging": 172, "seasonMeals": 74 }
+    ],
+    "NC": [
+      { "city": "Charlotte", "county": "Mecklenburg", "lodging": 138, "meals": 69 },
+      { "city": "Raleigh", "county": "Wake", "lodging": 135, "meals": 69 },
+      { "city": "Asheville", "county": "Buncombe", "lodging": 128, "meals": 69 },
+      { "city": "Outer Banks", "county": "Dare", "lodging": 131, "meals": 69, "seasonStart": "06-01", "seasonEnd": "09-15", "seasonLodging": 192, "seasonMeals": 74 }
+    ],
+    "ND": [
+      { "city": "Fargo", "county": "Cass", "lodging": 112, "meals": 69 },
+      { "city": "Bismarck", "county": "Burleigh", "lodging": 114, "meals": 69 }
+    ],
+    "NE": [
+      { "city": "Omaha", "county": "Douglas", "lodging": 118, "meals": 69 },
+      { "city": "Lincoln", "county": "Lancaster", "lodging": 115, "meals": 69 }
+    ],
+    "NH": [
+      { "city": "Manchester", "county": "Hillsborough", "lodging": 122, "meals": 69 },
+      { "city": "Portsmouth", "county": "Rockingham", "lodging": 135, "meals": 69 }
+    ],
+    "NJ": [
+      { "city": "Newark", "county": "Essex", "lodging": 142, "meals": 74 },
+      { "city": "Atlantic City", "county": "Atlantic", "lodging": 128, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 175, "seasonMeals": 74 },
+      { "city": "Princeton", "county": "Mercer", "lodging": 154, "meals": 74 }
+    ],
+    "NM": [
+      { "city": "Albuquerque", "county": "Bernalillo", "lodging": 118, "meals": 69 },
+      { "city": "Santa Fe", "county": "Santa Fe", "lodging": 131, "meals": 74 }
+    ],
+    "NV": [
+      { "city": "Las Vegas", "county": "Clark", "lodging": 135, "meals": 74 },
+      { "city": "Reno", "county": "Washoe", "lodging": 122, "meals": 69 },
+      { "city": "Stateline", "county": "Douglas", "lodging": 145, "meals": 74, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 210, "seasonMeals": 79 }
+    ],
+    "NY": [
+      { "city": "New York", "county": "New York", "lodging": 293, "meals": 79 },
+      { "city": "Brooklyn", "county": "Kings", "lodging": 293, "meals": 79 },
+      { "city": "Manhattan", "county": "New York", "lodging": 293, "meals": 79 },
+      { "city": "Albany", "county": "Albany", "lodging": 128, "meals": 69 },
+      { "city": "Buffalo", "county": "Erie", "lodging": 122, "meals": 69 },
+      { "city": "Rochester", "county": "Monroe", "lodging": 124, "meals": 69 },
+      { "city": "Syracuse", "county": "Onondaga", "lodging": 120, "meals": 69 },
+      { "city": "Lake Placid", "county": "Essex", "lodging": 135, "meals": 69, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 182, "seasonMeals": 74 },
+      { "city": "Hamptons", "county": "Suffolk", "lodging": 145, "meals": 74, "seasonStart": "06-01", "seasonEnd": "09-15", "seasonLodging": 235, "seasonMeals": 79 }
+    ],
+    "OH": [
+      { "city": "Columbus", "county": "Franklin", "lodging": 128, "meals": 69 },
+      { "city": "Cleveland", "county": "Cuyahoga", "lodging": 126, "meals": 69 },
+      { "city": "Cincinnati", "county": "Hamilton", "lodging": 132, "meals": 74 }
+    ],
+    "OK": [
+      { "city": "Oklahoma City", "county": "Oklahoma", "lodging": 115, "meals": 69 },
+      { "city": "Tulsa", "county": "Tulsa", "lodging": 114, "meals": 69 }
+    ],
+    "OR": [
+      { "city": "Portland", "county": "Multnomah", "lodging": 148, "meals": 74 },
+      { "city": "Eugene", "county": "Lane", "lodging": 121, "meals": 69 },
+      { "city": "Bend", "county": "Deschutes", "lodging": 135, "meals": 69 },
+      { "city": "Seaside", "county": "Clatsop", "lodging": 131, "meals": 69, "seasonStart": "06-01", "seasonEnd": "09-30", "seasonLodging": 178, "seasonMeals": 74 }
+    ],
+    "PA": [
+      { "city": "Philadelphia", "county": "Philadelphia", "lodging": 165, "meals": 74 },
+      { "city": "Pittsburgh", "county": "Allegheny", "lodging": 135, "meals": 74 },
+      { "city": "Harrisburg", "county": "Dauphin", "lodging": 122, "meals": 69 },
+      { "city": "Poconos", "county": "Monroe", "lodging": 118, "meals": 69, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 148, "seasonMeals": 69 }
+    ],
+    "RI": [
+      { "city": "Providence", "county": "Providence", "lodging": 135, "meals": 74 },
+      { "city": "Newport", "county": "Newport", "lodging": 142, "meals": 74, "seasonStart": "06-01", "seasonEnd": "09-30", "seasonLodging": 225, "seasonMeals": 79 }
+    ],
+    "SC": [
+      { "city": "Charleston", "county": "Charleston", "lodging": 142, "meals": 74 },
+      { "city": "Columbia", "county": "Richland", "lodging": 118, "meals": 69 },
+      { "city": "Myrtle Beach", "county": "Horry", "lodging": 122, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 172, "seasonMeals": 74 },
+      { "city": "Hilton Head", "county": "Beaufort", "lodging": 138, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 175, "seasonMeals": 74 }
+    ],
+    "SD": [
+      { "city": "Sioux Falls", "county": "Minnehaha", "lodging": 112, "meals": 69 },
+      { "city": "Rapid City", "county": "Pennington", "lodging": 115, "meals": 69, "seasonStart": "06-01", "seasonEnd": "09-15", "seasonLodging": 148, "seasonMeals": 69 }
+    ],
+    "TN": [
+      { "city": "Nashville", "county": "Davidson", "lodging": 142, "meals": 74 },
+      { "city": "Memphis", "county": "Shelby", "lodging": 128, "meals": 69 },
+      { "city": "Knoxville", "county": "Knox", "lodging": 120, "meals": 69 },
+      { "city": "Gatlinburg", "county": "Sevier", "lodging": 118, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 145, "seasonMeals": 69 }
+    ],
+    "TX": [
+      { "city": "Houston", "county": "Harris", "lodging": 138, "meals": 74 },
+      { "city": "Dallas", "county": "Dallas", "lodging": 142, "meals": 74 },
+      { "city": "Austin", "county": "Travis", "lodging": 155, "meals": 74 },
+      { "city": "San Antonio", "county": "Bexar", "lodging": 128, "meals": 69 },
+      { "city": "Fort Worth", "county": "Tarrant", "lodging": 135, "meals": 74 },
+      { "city": "El Paso", "county": "El Paso", "lodging": 115, "meals": 69 },
+      { "city": "Galveston", "county": "Galveston", "lodging": 125, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 168, "seasonMeals": 69 }
+    ],
+    "UT": [
+      { "city": "Salt Lake City", "county": "Salt Lake", "lodging": 132, "meals": 69 },
+      { "city": "Park City", "county": "Summit", "lodging": 142, "meals": 74, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 248, "seasonMeals": 79 },
+      { "city": "Moab", "county": "Grand", "lodging": 128, "meals": 69, "seasonStart": "03-01", "seasonEnd": "05-31", "seasonLodging": 165, "seasonMeals": 74 }
+    ],
+    "VA": [
+      { "city": "Arlington", "county": "Arlington", "lodging": 225, "meals": 79 },
+      { "city": "Richmond", "county": "Richmond City", "lodging": 135, "meals": 69 },
+      { "city": "Virginia Beach", "county": "Virginia Beach City", "lodging": 128, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 172, "seasonMeals": 74 },
+      { "city": "Alexandria", "county": "Alexandria City", "lodging": 225, "meals": 79 }
+    ],
+    "VT": [
+      { "city": "Burlington", "county": "Chittenden", "lodging": 128, "meals": 69 },
+      { "city": "Stowe", "county": "Lamoille", "lodging": 135, "meals": 69, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 195, "seasonMeals": 74 }
+    ],
+    "WA": [
+      { "city": "Seattle", "county": "King", "lodging": 171, "meals": 74 },
+      { "city": "Bellevue", "county": "King", "lodging": 171, "meals": 74 },
+      { "city": "Spokane", "county": "Spokane", "lodging": 120, "meals": 69 },
+      { "city": "Tacoma", "county": "Pierce", "lodging": 135, "meals": 74 }
+    ],
+    "WI": [
+      { "city": "Milwaukee", "county": "Milwaukee", "lodging": 124, "meals": 69 },
+      { "city": "Madison", "county": "Dane", "lodging": 122, "meals": 69 },
+      { "city": "Wisconsin Dells", "county": "Columbia", "lodging": 115, "meals": 69, "seasonStart": "06-01", "seasonEnd": "08-31", "seasonLodging": 148, "seasonMeals": 69 }
+    ],
+    "WV": [
+      { "city": "Charleston", "county": "Kanawha", "lodging": 113, "meals": 69 },
+      { "city": "Morgantown", "county": "Monongalia", "lodging": 112, "meals": 69 }
+    ],
+    "WY": [
+      { "city": "Cheyenne", "county": "Laramie", "lodging": 113, "meals": 69 },
+      { "city": "Jackson", "county": "Teton", "lodging": 138, "meals": 74, "seasonStart": "12-01", "seasonEnd": "03-31", "seasonLodging": 210, "seasonMeals": 79 }
+    ]
+  }
+}
