@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Travel Calculator - Trip Cost Estimator</title>
+  <title>Travel Allowance Calculator</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <header class="header">
-      <h1>&#x2708;&#xFE0F; Travel Calculator</h1>
+      <h1>&#x2708;&#xFE0F; Travel Allowance Calculator</h1>
       <p class="subtitle">Estimate trip costs using real road distances and GSA per diem rates</p>
     </header>
 
@@ -19,18 +19,29 @@
       <section class="card" id="formCard">
         <h2 class="card-title">Trip Details</h2>
         <form id="tripForm" novalidate>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="startAddress">Starting Address <span class="required">*</span></label>
-              <input type="text" id="startAddress" placeholder="123 Main St, Los Angeles, CA" autocomplete="off">
-              <span class="error-msg" id="startAddressError"></span>
+          <!-- Starting Location -->
+          <fieldset class="address-section">
+            <legend class="address-legend">Starting Location</legend>
+            <div class="form-row form-row-address">
+              <div class="form-group">
+                <label for="startZip">Zip Code <span class="required">*</span></label>
+                <input type="text" id="startZip" placeholder="90210" maxlength="10" autocomplete="off">
+              </div>
             </div>
-            <div class="form-group">
-              <label for="endAddress">Destination Address <span class="required">*</span></label>
-              <input type="text" id="endAddress" placeholder="456 Park Ave, New York, NY" autocomplete="off">
-              <span class="error-msg" id="endAddressError"></span>
+            <span class="error-msg" id="startAddrError"></span>
+          </fieldset>
+
+          <!-- Destination Location -->
+          <fieldset class="address-section">
+            <legend class="address-legend">Destination Location</legend>
+            <div class="form-row form-row-address">
+              <div class="form-group">
+                <label for="endZip">Zip Code <span class="required">*</span></label>
+                <input type="text" id="endZip" placeholder="10001" maxlength="10" autocomplete="off">
+              </div>
             </div>
-          </div>
+            <span class="error-msg" id="endAddrError"></span>
+          </fieldset>
 
           <div class="form-row form-row-three">
             <div class="form-group">
@@ -45,7 +56,7 @@
             </div>
             <div class="form-group">
               <label for="ratePerMile">Rate per Mile ($)</label>
-              <input type="number" id="ratePerMile" value="0.70" min="0.01" step="0.01">
+              <input type="number" id="ratePerMile" value="0.725" min="0.01" step="0.001">
               <span class="error-msg" id="rateError"></span>
             </div>
           </div>
@@ -87,21 +98,32 @@
           <button class="btn btn-primary" id="downloadPdfBtn">
             &#x1F4E5; Download PDF Report
           </button>
+          <button class="btn btn-outline" id="emailResultsBtn">
+            &#x2709;&#xFE0F; Email Results
+          </button>
           <button class="btn btn-secondary" id="newCalcBtn">
             &#x1F504; New Calculation
           </button>
+        </div>
+        <div class="email-form hidden" id="emailForm">
+          <div class="email-row">
+            <input type="email" id="emailToAddr" placeholder="recipient@example.com" class="email-input">
+            <button class="btn btn-primary btn-sm" id="sendEmailBtn">Send</button>
+            <button class="btn btn-sm btn-secondary" id="cancelEmailBtn">Cancel</button>
+          </div>
+          <span class="email-status" id="emailStatus"></span>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <p>Powered by OpenStreetMap, OSRM, and GSA FY2025 per diem rates. For estimation purposes only.</p>
+      <p>Powered by OpenStreetMap, OSRM, and GSA FY2026 per diem rates. For estimation purposes only.</p>
     </footer>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin=""></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

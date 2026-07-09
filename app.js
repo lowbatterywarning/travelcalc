@@ -15,10 +15,16 @@
   const costTable = $("costTable");
   const mapDiv = $("map");
   const downloadPdfBtn = $("downloadPdfBtn");
+  const emailResultsBtn = $("emailResultsBtn");
+  const emailForm = $("emailForm");
+  const emailToAddr = $("emailToAddr");
+  const sendEmailBtn = $("sendEmailBtn");
+  const cancelEmailBtn = $("cancelEmailBtn");
+  const emailStatus = $("emailStatus");
   const newCalcBtn = $("newCalcBtn");
 
-  const startAddress = $("startAddress");
-  const endAddress = $("endAddress");
+  const startZip = $("startZip");
+  const endZip = $("endZip");
   const startDate = $("startDate");
   const endDate = $("endDate");
   const ratePerMile = $("ratePerMile");
@@ -32,9 +38,13 @@
     durationSeconds: 0,
     routeGeometry: null,
     perDiemRate: 0,
+    perDiemLodging: 0,
+    perDiemMeals: 0,
     perDiemLocation: null,
     perDiemNote: "",
     mileageCost: 0,
+    lodgingCost: 0,
+    mealsCost: 0,
     perDiemCost: 0,
     totalCost: 0,
     days: 0,
@@ -70,11 +80,19 @@
   function showFieldError(fieldId, msg) {
     var el = $(fieldId);
     var input = el.previousElementSibling;
-    if (input && input.tagName === "INPUT") {
+    if (input && (input.tagName === "INPUT" || input.tagName === "SELECT")) {
       input.classList.add("input-error");
     }
     el.textContent = msg;
     el.classList.add("visible");
+  }
+
+  function highlightError(inputEl, errorEl, msg) {
+    if (inputEl) { inputEl.classList.add("input-error"); }
+    if (errorEl) {
+      errorEl.textContent = msg;
+      errorEl.classList.add("visible");
+    }
   }
 
   function clearFieldErrors() {
@@ -87,6 +105,11 @@
     inputs.forEach(function (i) {
       i.classList.remove("input-error");
     });
+  }
+
+  function buildFullAddress(prefix) {
+    var zip = $(prefix + "Zip").value.trim();
+    return zip;
   }
 
   function formatCurrency(val) {
@@ -119,14 +142,20 @@
     hideGlobalError();
     var valid = true;
 
-    if (!startAddress.value.trim()) {
-      showFieldError("startAddressError", "Please enter a starting address.");
+    // Starting location: Zip code required (5 digits)
+    var startZ = startZip.value.trim();
+    if (!startZ || !/^\d{5}/.test(startZ)) {
+      highlightError(startZip, $("startAddrError"), "Enter a valid 5-digit zip code.");
       valid = false;
     }
-    if (!endAddress.value.trim()) {
-      showFieldError("endAddressError", "Please enter a destination address.");
+
+    // Destination location: Zip code required (5 digits)
+    var endZ = endZip.value.trim();
+    if (!endZ || !/^\d{5}/.test(endZ)) {
+      highlightError(endZip, $("endAddrError"), "Enter a valid 5-digit zip code.");
       valid = false;
     }
+
     if (!startDate.value) {
       showFieldError("startDateError", "Please select a start date.");
       valid = false;
@@ -156,9 +185,21 @@
 
   // ==================== Geocoding (Nominatim) ====================
   function geocodeAddress(address) {
-    var url = "https://nominatim.openstreetmap.org/search?format=json&q="
-      + encodeURIComponent(address)
-      + "&limit=1&addressdetails=1";
+    // Detect if input is a US zip code (5 digits, possibly followed by ", USA")
+    var zipMatch = address.match(/^(\d{5})/);
+    var url;
+    if (zipMatch) {
+      // Use structured postal code search — far more accurate than free-text
+      url = "https://nominatim.openstreetmap.org/search?format=json"
+        + "&postalcode=" + zipMatch[1]
+        + "&country=us"
+        + "&limit=1&addressdetails=1";
+    } else {
+      // Free-text fallback for non-zip addresses
+      url = "https://nominatim.openstreetmap.org/search?format=json&q="
+        + encodeURIComponent(address)
+        + "&limit=1&addressdetails=1&countrycodes=us";
+    }
 
     return fetch(url, {
       headers: { "User-Agent": "TravelCalculator/1.0 (personal project)" }
@@ -307,142 +348,87 @@
       });
   }
 
-  function lookupPerDiem(geo, tripStartDate, tripEndDate) {
+  function lookupPerDiemByZip(zipCode, tripStartDate, tripEndDate) {
     if (!perDiemData) { return null; }
+    if (!zipCode || zipCode.length < 3) { return getStandardRate(); }
 
-    var stateCode = geo.stateCode;
-    var city = (geo.city || "").trim();
-    var county = (geo.county || "").trim();
+    var data = perDiemData;
+    var destId = null;
 
-    // Normalize strings for matching
-    var cityLower = city.toLowerCase();
-    var countyLower = county.toLowerCase();
-
-    var locations = perDiemData.locations[stateCode];
-    if (!locations || locations.length === 0) {
-      return {
-        lodging: perDiemData.standardRate.lodging,
-        meals: perDiemData.standardRate.meals,
-        dailyRate: perDiemData.standardRate.lodging + perDiemData.standardRate.meals,
-        locationName: "Standard CONUS Rate",
-        isStandard: true
-      };
+    // Try 3-digit prefix first (most efficient)
+    var prefix = zipCode.substring(0, 3);
+    if (data.zipPrefixLookup && data.zipPrefixLookup[prefix]) {
+      destId = data.zipPrefixLookup[prefix];
+    }
+    // Try full 5-digit zip
+    if (!destId && data.zipLookup && data.zipLookup[zipCode]) {
+      destId = data.zipLookup[zipCode];
     }
 
-    // Try exact city match first, then county match
-    var bestMatch = null;
-    var bestScore = 0;
-
-    for (var i = 0; i < locations.length; i++) {
-      var loc = locations[i];
-      var locCity = (loc.city || "").trim().toLowerCase();
-      var locCounty = (loc.county || "").trim().toLowerCase();
-      var score = 0;
-
-      // Exact city match = highest priority
-      if (locCity === cityLower) {
-        score = 100;
-      } else if (cityLower.indexOf(locCity) !== -1 || locCity.indexOf(cityLower) !== -1) {
-        score = 70;
-      }
-
-      // County match
-      if (locCounty === countyLower) {
-        score += 30;
-      } else if (countyLower.indexOf(locCounty) !== -1 || locCounty.indexOf(countyLower) !== -1) {
-        score += 15;
-      }
-
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = loc;
-      }
+    if (!destId || !data.destinations[destId]) {
+      return getStandardRate(zipCode);
     }
 
-    if (bestMatch) {
-      // Check for seasonal rates
-      var seasonalRate = getSeasonalRate(bestMatch, stateCode, tripStartDate, tripEndDate);
-      if (seasonalRate) {
-        return seasonalRate;
-      }
+    var dest = data.destinations[destId];
+    var monthlyRates = dest.rates; // [Oct, Nov, Dec, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep]
+    var mealsRate = dest.meals;
 
-      return {
-        lodging: bestMatch.lodging,
-        meals: bestMatch.meals,
-        dailyRate: bestMatch.lodging + bestMatch.meals,
-        locationName: bestMatch.city + ", " + stateCode,
-        isStandard: false
-      };
-    }
+    // Calculate lodging cost day-by-day using monthly rates
+    // Fiscal year months: 0=Oct, 1=Nov, 2=Dec, 3=Jan, 4=Feb, 5=Mar, 6=Apr, 7=May, 8=Jun, 9=Jul, 10=Aug, 11=Sep
+    var sParts = tripStartDate.split("-");
+    var eParts = tripEndDate.split("-");
+    var d = new Date(Date.UTC(parseInt(sParts[0], 10), parseInt(sParts[1], 10) - 1, parseInt(sParts[2], 10)));
+    var end = new Date(Date.UTC(parseInt(eParts[0], 10), parseInt(eParts[1], 10) - 1, parseInt(eParts[2], 10)));
 
-    // Fallback to standard CONUS
-    return {
-      lodging: perDiemData.standardRate.lodging,
-      meals: perDiemData.standardRate.meals,
-      dailyRate: perDiemData.standardRate.lodging + perDiemData.standardRate.meals,
-      locationName: "Standard CONUS Rate (no specific match for " + city + ", " + stateCode + ")",
-      isStandard: true
-    };
-  }
-
-  function getSeasonalRate(location, stateCode, tripStartDate, tripEndDate) {
-    if (!location.seasonStart || !location.seasonEnd) {
-      return null;
-    }
-
-    // Parse season dates (month-day format)
-    var seasonStart = parseMonthDay(location.seasonStart);
-    var seasonEnd = parseMonthDay(location.seasonEnd);
-
-    // Parse trip dates into [year, month, day] to avoid timezone issues
-    var startParts = tripStartDate.split("-");
-    var endParts = tripEndDate.split("-");
-    var startY = parseInt(startParts[0], 10);
-    var startM = parseInt(startParts[1], 10);
-    var startD = parseInt(startParts[2], 10);
-    var endY = parseInt(endParts[0], 10);
-    var endM = parseInt(endParts[1], 10);
-    var endD = parseInt(endParts[2], 10);
-
-    // Handle cross-year seasons (e.g., Dec 1 to Mar 31)
-    var isCrossYear = seasonStart > seasonEnd;
-
-    // Iterate day by day using numeric date comparison
-    var d = new Date(Date.UTC(startY, startM - 1, startD));
-    var end = new Date(Date.UTC(endY, endM - 1, endD));
+    var totalLodging = 0;
+    var dayCount = 0;
+    var ratesUsed = {}; // Track which monthly rates were applied
 
     while (d <= end) {
-      var md = d.getUTCMonth() * 100 + d.getUTCDate();
-
-      var inSeason = false;
-      if (isCrossYear) {
-        inSeason = md >= seasonStart || md <= seasonEnd;
-      } else {
-        inSeason = md >= seasonStart && md <= seasonEnd;
-      }
-
-      if (inSeason) {
-        return {
-          lodging: location.seasonLodging,
-          meals: location.seasonMeals,
-          dailyRate: location.seasonLodging + location.seasonMeals,
-          locationName: location.city + ", " + stateCode + " (Seasonal Rate)",
-          isStandard: false
-        };
-      }
-
+      // Convert calendar month (0-11) to fiscal year month index (0=Oct...11=Sep)
+      var calMonth = d.getUTCMonth(); // 0=Jan...11=Dec
+      var fyIndex = (calMonth + 3) % 12; // Jan(0)→3, Feb(1)→4, ..., Oct(9)→0, Nov(10)→1, Dec(11)→2
+      var rate = monthlyRates[fyIndex] || data.standardLodging || 110;
+      totalLodging += rate;
+      ratesUsed[rate] = true;
+      dayCount++;
       d.setUTCDate(d.getUTCDate() + 1);
     }
 
-    return null;
+    // Average lodging rate for display
+    var avgLodging = Math.round(totalLodging / dayCount);
+
+    // If multiple rates were used, note it
+    var rateNote = "";
+    var uniqueRates = Object.keys(ratesUsed);
+    if (uniqueRates.length > 1) {
+      rateNote = " (varies by month)";
+    }
+
+    return {
+      lodging: avgLodging,
+      meals: mealsRate,
+      dailyRate: avgLodging + mealsRate,
+      totalLodging: totalLodging,
+      totalMeals: mealsRate * dayCount,
+      totalPerDiem: totalLodging + (mealsRate * dayCount),
+      locationName: dest.name + ", " + (dest.state || ""),
+      isStandard: false,
+      rateNote: rateNote
+    };
   }
 
-  function parseMonthDay(str) {
-    // str is "MM-DD"
-    var parts = str.split("-");
-    var month = parseInt(parts[0], 10); // 1-12
-    var day = parseInt(parts[1], 10);   // 1-31
-    return (month - 1) * 100 + day;     // 0..11 * 100 + day
+  function getStandardRate(zipCode) {
+    var stdLodging = perDiemData ? (perDiemData.standardLodging || 110) : 110;
+    var stdMeals = perDiemData ? (perDiemData.standardMeals || 68) : 68;
+    var note = zipCode ? " (no match for ZIP " + zipCode + ")" : "";
+    return {
+      lodging: stdLodging,
+      meals: stdMeals,
+      dailyRate: stdLodging + stdMeals,
+      locationName: "Standard CONUS Rate" + note,
+      isStandard: true
+    };
   }
 
   // ==================== Calculation ====================
@@ -450,7 +436,7 @@
     state.distanceMiles = state.distanceMeters / 1609.344;
     var rate = parseFloat(ratePerMile.value);
 
-    // Parse dates as UTC to avoid timezone issues
+    // Parse dates as UTC
     var sParts = startDate.value.split("-");
     var eParts = endDate.value.split("-");
     var sd = new Date(Date.UTC(parseInt(sParts[0], 10), parseInt(sParts[1], 10) - 1, parseInt(sParts[2], 10)));
@@ -458,7 +444,14 @@
     state.days = Math.max(1, Math.round((ed - sd) / 86400000) + 1);
 
     state.mileageCost = state.distanceMiles * rate;
-    state.perDiemCost = state.perDiemRate * state.days;
+
+    // If per-diem totals were pre-calculated (zip-based lookup), use them
+    // Otherwise fall back to simple day × rate multiplication
+    if (!state.perDiemCost) {
+      state.lodgingCost = state.perDiemLodging * state.days;
+      state.mealsCost = state.perDiemMeals * state.days;
+      state.perDiemCost = state.lodgingCost + state.mealsCost;
+    }
     state.totalCost = state.mileageCost + state.perDiemCost;
   }
 
@@ -476,8 +469,9 @@
       { label: "End Date", value: formatDate(endDate.value) },
       { label: "Duration", value: state.days + " day" + (state.days !== 1 ? "s" : "") },
       { label: "Distance", value: formatDistance(state.distanceMiles) },
-      { label: "Rate per Mile", value: formatCurrency(parseFloat(ratePerMile.value)) },
-      { label: "Per Diem Rate", value: formatCurrency(state.perDiemRate) + "/day" }
+      { label: "Mileage Cost", value: formatCurrency(state.mileageCost) },
+      { label: "Lodging Rate", value: formatCurrency(state.perDiemLodging) + "/day" },
+      { label: "Meals Rate", value: formatCurrency(state.perDiemMeals) + "/day" }
     ];
 
     var html = "";
@@ -512,7 +506,17 @@
       + "<span class=\"cost-value\">" + formatCurrency(state.mileageCost) + "</span>"
       + "</div>"
       + "<div class=\"cost-row\">"
-      + "<span class=\"cost-label\">Per Diem Cost (" + state.days + " day" + (state.days !== 1 ? "s" : "") + ")</span>"
+      + "<span class=\"cost-label\">Lodging Cost (" + state.days + " day" + (state.days !== 1 ? "s" : "")
+      + " \u00D7 " + formatCurrency(state.perDiemLodging) + ")</span>"
+      + "<span class=\"cost-value\">" + formatCurrency(state.lodgingCost) + "</span>"
+      + "</div>"
+      + "<div class=\"cost-row\">"
+      + "<span class=\"cost-label\">Meals Cost (" + state.days + " day" + (state.days !== 1 ? "s" : "")
+      + " \u00D7 " + formatCurrency(state.perDiemMeals) + ")</span>"
+      + "<span class=\"cost-value\">" + formatCurrency(state.mealsCost) + "</span>"
+      + "</div>"
+      + "<div class=\"cost-row cost-subtotal\">"
+      + "<span class=\"cost-label\">Total Per Diem</span>"
       + "<span class=\"cost-value\">" + formatCurrency(state.perDiemCost) + "</span>"
       + "</div>"
       + "<div class=\"cost-row total\">"
@@ -599,13 +603,15 @@
   }
 
   // ==================== PDF Generation ====================
-  function generatePDF() {
+  // onComplete(blob): optional callback — if provided, PDF is returned as blob
+  // instead of being saved to disk. Used by email handler for attachments.
+  function generatePDF(onComplete) {
     try {
       var btn = downloadPdfBtn;
       btn.disabled = true;
       btn.textContent = "Generating PDF...";
 
-      /* global jspdf, html2canvas */
+      /* global jspdf */
       var doc = new jspdf.jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -653,8 +659,9 @@
         ["End Date:", formatDate(endDate.value)],
         ["Duration:", state.days + " day" + (state.days !== 1 ? "s" : "")],
         ["Distance:", formatDistance(state.distanceMiles)],
-        ["Rate per Mile:", formatCurrency(parseFloat(ratePerMile.value))],
-        ["Per Diem Rate:", formatCurrency(state.perDiemRate) + "/day"]
+        ["Mileage Cost:", formatCurrency(state.mileageCost)],
+        ["Lodging Rate:", formatCurrency(state.perDiemLodging) + "/day"],
+        ["Meals Rate:", formatCurrency(state.perDiemMeals) + "/day"]
       ];
 
       for (var i = 0; i < details.length; i++) {
@@ -684,7 +691,8 @@
       doc.setTextColor(30, 41, 59);
       var costItems = [
         ["Mileage Cost:", formatCurrency(state.mileageCost)],
-        ["Per Diem Cost:", formatCurrency(state.perDiemCost) + " (" + state.days + " days)"]
+        ["Lodging Cost:", formatCurrency(state.lodgingCost) + " (" + state.days + " days \u00D7 " + formatCurrency(state.perDiemLodging) + ")"],
+        ["Meals Cost:", formatCurrency(state.mealsCost) + " (" + state.days + " days \u00D7 " + formatCurrency(state.perDiemMeals) + ")"]
       ];
 
       for (var j = 0; j < costItems.length; j++) {
@@ -693,6 +701,15 @@
         doc.text(costItems[j][1], col2X, y);
         y += lineHeight + 1;
       }
+
+      // Per Diem subtotal
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.2);
+      doc.line(margin, y - 2, pageWidth - margin, y - 2);
+      doc.setFont(undefined, "bold");
+      doc.text("Total Per Diem:", col1X, y);
+      doc.text(formatCurrency(state.perDiemCost), col2X, y);
+      y += lineHeight + 3;
 
       y += 2;
 
@@ -709,52 +726,80 @@
       doc.text(formatCurrency(state.totalCost), col2X, y);
       y += 10;
 
-      // Capture map
-      var mapElement = mapDiv;
-      if (mapElement && mapElement.querySelector(".leaflet-container")) {
-        return html2canvas(mapElement, {
-          useCORS: true,
-          scale: 2,
-          backgroundColor: "#ffffff"
-        }).then(function (canvas) {
-          var mapImgData = canvas.toDataURL("image/png");
-          var mapImgWidth = pageWidth - margin * 2;
-          var mapImgHeight = (canvas.height / canvas.width) * mapImgWidth;
+      // Static map image (reliable, no CORS issues)
+      var zoom = calcStaticMapZoom(state.distanceMiles);
+      var centerLat = (state.startGeo.lat + state.endGeo.lat) / 2;
+      var centerLon = (state.startGeo.lon + state.endGeo.lon) / 2;
+      var mapUrl = "https://staticmap.openstreetmap.de/staticmap.php"
+        + "?center=" + centerLat.toFixed(5) + "," + centerLon.toFixed(5)
+        + "&zoom=" + zoom
+        + "&size=800x400"
+        + "&markers=" + state.startGeo.lat.toFixed(5) + "," + state.startGeo.lon.toFixed(5) + ",ol-marker"
+        + "|" + state.endGeo.lat.toFixed(5) + "," + state.endGeo.lon.toFixed(5) + ",ol-marker";
 
-          // Check if map fits on this page
-          if (y + mapImgHeight + 25 > doc.internal.pageSize.getHeight()) {
-            doc.addPage();
-            y = margin;
-          }
+      var mapImg = new Image();
+      mapImg.crossOrigin = "anonymous";
+      mapImg.onload = function () {
+        var mapImgWidth = pageWidth - margin * 2;
+        var mapImgHeight = (mapImg.naturalHeight / mapImg.naturalWidth) * mapImgWidth;
 
-          doc.setFontSize(10);
-          doc.setTextColor(30, 41, 59);
-          doc.setFont(undefined, "bold");
-          doc.text("Route Map", margin, y);
-          y += 6;
+        if (y + mapImgHeight + 25 > doc.internal.pageSize.getHeight()) {
+          doc.addPage();
+          y = margin;
+        }
 
-          doc.addImage(mapImgData, "PNG", margin, y, mapImgWidth, mapImgHeight);
-          y += mapImgHeight + 10;
+        doc.setFontSize(10);
+        doc.setTextColor(30, 41, 59);
+        doc.setFont(undefined, "bold");
+        doc.text("Route Map", margin, y);
+        y += 6;
 
-          addDisclaimer(doc, y);
+        doc.addImage(mapImg, "PNG", margin, y, mapImgWidth, mapImgHeight);
+        y += mapImgHeight + 10;
 
-          doc.save("trip-report.pdf");
-          btn.disabled = false;
-          btn.textContent = "\uD83D\uDCE5 Download PDF Report";
-        });
-      } else {
         addDisclaimer(doc, y);
-        doc.save("trip-report.pdf");
+        if (onComplete) {
+          onComplete(doc.output("blob"));
+        } else {
+          doc.save("trip-report.pdf");
+        }
         btn.disabled = false;
         btn.textContent = "\uD83D\uDCE5 Download PDF Report";
-        return Promise.resolve();
-      }
+      };
+      mapImg.onerror = function () {
+        doc.setFontSize(9);
+        doc.setTextColor(200, 50, 50);
+        doc.text("(Map image could not be loaded from the server.)", margin, y + 6);
+        y += 14;
+        addDisclaimer(doc, y);
+        if (onComplete) {
+          onComplete(doc.output("blob"));
+        } else {
+          doc.save("trip-report.pdf");
+        }
+        btn.disabled = false;
+        btn.textContent = "\uD83D\uDCE5 Download PDF Report";
+      };
+      mapImg.src = mapUrl;
+      return; // Async — image onload handles PDF finalization
     } catch (e) {
       downloadPdfBtn.disabled = false;
       downloadPdfBtn.textContent = "\uD83D\uDCE5 Download PDF Report";
       alert("Failed to generate PDF: " + (e.message || "Unknown error"));
       return Promise.resolve();
     }
+  }
+
+  function calcStaticMapZoom(distanceMiles) {
+    // Approximate zoom based on distance to fit both markers
+    if (distanceMiles < 1) { return 14; }
+    if (distanceMiles < 5) { return 12; }
+    if (distanceMiles < 20) { return 10; }
+    if (distanceMiles < 75) { return 8; }
+    if (distanceMiles < 250) { return 6; }
+    if (distanceMiles < 800) { return 5; }
+    if (distanceMiles < 2000) { return 4; }
+    return 3;
   }
 
   function addDisclaimer(doc, y) {
@@ -770,11 +815,11 @@
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184);
     doc.setFont(undefined, "italic");
-    doc.text("Disclaimer: This report uses GSA FY2025 per diem rates and OpenStreetMap/OSRM routing data.", margin, y);
+    doc.text("Disclaimer: This report uses GSA FY2026 per diem rates and OpenStreetMap/OSRM routing data.", margin, y);
     y += 4;
     doc.text("All cost estimates are for informational purposes only and may differ from actual expenses.", margin, y);
     y += 4;
-    doc.text("Travel Calculator version 1.0", margin, y);
+    doc.text("Travel Allowance Calculator v1.0", margin, y);
   }
 
   // ==================== Reset ====================
@@ -795,9 +840,13 @@
       durationSeconds: 0,
       routeGeometry: null,
       perDiemRate: 0,
+      perDiemLodging: 0,
+      perDiemMeals: 0,
       perDiemLocation: null,
       perDiemNote: "",
       mileageCost: 0,
+      lodgingCost: 0,
+      mealsCost: 0,
       perDiemCost: 0,
       totalCost: 0,
       days: 0,
@@ -809,7 +858,7 @@
 
     // Reset form
     form.reset();
-    ratePerMile.value = "0.70";
+    ratePerMile.value = "0.725";
     clearFieldErrors();
     hideGlobalError();
 
@@ -836,13 +885,13 @@
     loadPerDiemData()
       .then(function () {
         // Step 1: Geocode start address
-        return geocodeAddress(startAddress.value.trim());
+        return geocodeAddress(buildFullAddress("start"));
       })
       .then(function (startGeo) {
         state.startGeo = startGeo;
         // Step 2: Wait 1100ms to respect Nominatim rate limit
         return delay(1100).then(function () {
-          return geocodeAddress(endAddress.value.trim());
+          return geocodeAddress(buildFullAddress("end"));
         });
       })
       .then(function (endGeo) {
@@ -878,14 +927,25 @@
           state.polylineCoords = null;
         }
 
-        // Step 4: Lookup per diem for destination
-        var pd = lookupPerDiem(state.endGeo, startDate.value, endDate.value);
+        // Step 4: Lookup per diem by destination zip code
+        var destZip = endZip.value.trim();
+        var pd = lookupPerDiemByZip(destZip, startDate.value, endDate.value);
         if (pd) {
           state.perDiemRate = pd.dailyRate;
+          state.perDiemLodging = pd.lodging;
+          state.perDiemMeals = pd.meals;
           state.perDiemLocation = pd;
+          // If the lookup returned pre-calculated totals, use them
+          if (pd.totalLodging !== undefined) {
+            state.lodgingCost = pd.totalLodging;
+            state.mealsCost = pd.totalMeals;
+            state.perDiemCost = pd.totalPerDiem;
+          }
         } else {
           // Ultimate fallback
           state.perDiemRate = 178;
+          state.perDiemLodging = 110;
+          state.perDiemMeals = 68;
           state.perDiemLocation = {
             lodging: 110,
             meals: 68,
@@ -911,10 +971,124 @@
 
   // Download PDF
   downloadPdfBtn.addEventListener("click", function () {
-    generatePDF().catch(function (err) {
-      console.error("PDF generation error:", err);
-      alert("Failed to generate PDF. Please try again.");
+    generatePDF();
+  });
+
+  // Email Results — show/hide form
+  emailResultsBtn.addEventListener("click", function () {
+    var isHidden = emailForm.classList.contains("hidden");
+    if (isHidden) {
+      emailForm.classList.remove("hidden");
+      emailStatus.textContent = "";
+      emailStatus.className = "email-status";
+      emailToAddr.focus();
+    } else {
+      emailForm.classList.add("hidden");
+    }
+  });
+
+  cancelEmailBtn.addEventListener("click", function () {
+    emailForm.classList.add("hidden");
+    emailStatus.textContent = "";
+    emailStatus.className = "email-status";
+  });
+
+  // Send email — generates PDF and sends as attachment via EmailJS
+  // ================================================================
+  // EMAILJS SETUP GUIDE (free, 2 minutes):
+  //   1. Go to https://www.emailjs.com and click "Sign Up Free"
+  //   2. After login, go to "Email Services" → "Add New Service"
+  //      Choose Gmail/Outlook/etc. Click "Connect Account" → copy the Service ID
+  //   3. Go to "Email Templates" → "Create New Template"
+  //      Paste these variables into your template:
+  //        To: {{to_email}}
+  //        Subject: {{subject}}
+  //        Message: {{message}}
+  //        Attach a file field: {{file}}  (use the paperclip icon)
+  //      Save → copy the Template ID
+  //   4. Go to "Account" → "API Keys" → copy your Public Key
+  //   5. Replace the 3 values below with your keys
+  // ================================================================
+  var EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY";
+  var EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
+  var EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
+
+  sendEmailBtn.addEventListener("click", function () {
+    var toAddr = emailToAddr.value.trim();
+    if (!toAddr || toAddr.indexOf("@") === -1) {
+      emailStatus.textContent = "Please enter a valid email address.";
+      emailStatus.className = "email-status error";
+      return;
+    }
+
+    sendEmailBtn.disabled = true;
+    sendEmailBtn.textContent = "Generating PDF...";
+    emailStatus.textContent = "";
+    emailStatus.className = "email-status";
+
+    // Build text body
+    var bodyLines = [
+      "TRIP COST REPORT",
+      "",
+      "From: " + state.startGeo.displayName,
+      "To: " + state.endGeo.displayName,
+      "Dates: " + formatDate(startDate.value) + " to " + formatDate(endDate.value),
+      "Duration: " + state.days + " day" + (state.days !== 1 ? "s" : ""),
+      "Distance: " + formatDistance(state.distanceMiles),
+      "Rate per Mile: " + formatCurrency(parseFloat(ratePerMile.value)),
+      "Lodging Rate: " + formatCurrency(state.perDiemLodging) + "/day" + (state.perDiemLocation && state.perDiemLocation.rateNote ? state.perDiemLocation.rateNote : ""),
+      "Meals Rate: " + formatCurrency(state.perDiemMeals) + "/day",
+      "Location: " + (state.perDiemLocation ? state.perDiemLocation.locationName : "Standard CONUS Rate"),
+      "",
+      "--- COST BREAKDOWN ---",
+      "Mileage Cost: " + formatCurrency(state.mileageCost),
+      "Lodging Cost: " + formatCurrency(state.lodgingCost) + " (" + state.days + " days)",
+      "Meals Cost: " + formatCurrency(state.mealsCost) + " (" + state.days + " days)",
+      "Total Per Diem: " + formatCurrency(state.perDiemCost),
+      "TOTAL ESTIMATED COST: " + formatCurrency(state.totalCost),
+      "",
+      "---",
+      "Generated by Travel Allowance Calculator",
+      "GSA FY2026 per diem rates. For estimation purposes only."
+    ];
+
+    var subject = "Trip Cost Report - " + startZip.value.trim() + " to " + endZip.value.trim();
+
+    // Generate PDF blob, then send via EmailJS
+    generatePDF(function (pdfBlob) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        var base64 = reader.result.split(",")[1]; // Strip data:... prefix
+
+        var templateParams = {
+          to_email: toAddr,
+          subject: subject,
+          message: bodyLines.join("\n"),
+          file: base64,
+          filename: "trip-report.pdf"
+        };
+
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+          .then(function () {
+            emailStatus.textContent = "Report sent to " + toAddr + "!";
+            emailStatus.className = "email-status success";
+            sendEmailBtn.disabled = false;
+            sendEmailBtn.textContent = "Send";
+            emailToAddr.value = "";
+          })
+          .catch(function (err) {
+            emailStatus.textContent = "Failed: " + (err.text || err.message || "Check EmailJS setup.");
+            emailStatus.className = "email-status error";
+            sendEmailBtn.disabled = false;
+            sendEmailBtn.textContent = "Send";
+          });
+      };
+      reader.readAsDataURL(pdfBlob);
     });
+
+    // Reset button text — generatePDF handles its own button state
+    sendEmailBtn.textContent = "Sending...";
   });
 
   // New calculation
@@ -923,6 +1097,11 @@
   });
 
   // ==================== Initialize ====================
+  // Set minimum date to today to prevent past date selection
+  var today = new Date().toISOString().split("T")[0];
+  startDate.setAttribute("min", today);
+  endDate.setAttribute("min", today);
+
   // Preload per-diem data
   loadPerDiemData().catch(function () {
     console.warn("Could not preload per-diem.json. It will be loaded on first calculation.");

@@ -135,6 +135,51 @@ body {
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
+/* ===== Address Sections ===== */
+.address-section {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px 12px;
+  margin-bottom: 20px;
+}
+
+.address-legend {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary);
+  padding: 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-row-address {
+  grid-template-columns: 1fr;
+}
+
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.9375rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  appearance: auto;
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-group select.input-error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
 .error-msg {
   font-size: 0.8rem;
   color: var(--danger);
@@ -222,6 +267,22 @@ body {
   border-radius: var(--radius-sm);
   color: var(--danger);
   font-size: 0.875rem;
+}
+
+.btn-outline {
+  background: var(--card-bg);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+}
+
+.btn-outline:hover {
+  background: var(--primary-light);
+  box-shadow: none;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.8rem;
 }
 
 /* ===== Results Section ===== */
@@ -328,6 +389,21 @@ body {
   color: var(--primary);
 }
 
+.cost-row.cost-subtotal {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.cost-row.cost-subtotal .cost-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cost-row.cost-subtotal .cost-value {
+  font-weight: 700;
+  color: var(--text);
+}
+
 /* ===== Map ===== */
 #map {
   height: 400px;
@@ -342,6 +418,50 @@ body {
   justify-content: center;
   margin-top: 12px;
   margin-bottom: 8px;
+}
+
+/* ===== Email Form ===== */
+.email-form {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.email-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.email-input {
+  padding: 10px 14px;
+  font-size: 0.9375rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 260px;
+  max-width: 100%;
+}
+
+.email-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.email-status {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.email-status.success {
+  color: var(--success);
+}
+
+.email-status.error {
+  color: var(--danger);
 }
 
 /* ===== Footer ===== */
@@ -367,9 +487,14 @@ body {
   }
 
   .form-row,
-  .form-row-three {
+  .form-row-three,
+  .form-row-address {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+
+  .address-section {
+    padding: 14px 12px 8px;
   }
 
   .summary-grid {
