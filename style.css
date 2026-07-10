@@ -404,6 +404,24 @@ body {
   color: var(--text);
 }
 
+.cost-row.cost-detail {
+  padding: 4px 0 4px 20px;
+  border-bottom: none;
+  font-size: 0.875rem;
+}
+
+.cost-row.cost-detail .cost-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.cost-row.cost-detail .cost-value {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 /* ===== Map ===== */
 #map {
   height: 400px;
@@ -520,5 +538,187 @@ body {
 
   #map {
     height: 280px;
+  }
+}
+
+/* ===== Leg Cards ===== */
+.leg-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  background: var(--card-bg);
+  transition: box-shadow var(--transition), border-color var(--transition);
+  cursor: default;
+}
+
+.leg-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+}
+
+.leg-card.dragging {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+.leg-card.drag-over {
+  border-color: var(--primary);
+  border-style: dashed;
+  background: var(--primary-light);
+}
+
+.leg-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--secondary-light);
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.drag-handle {
+  cursor: grab;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  padding: 2px 4px;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.leg-type-select {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card-bg);
+  flex: 1;
+  max-width: 180px;
+}
+
+.leg-number {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-left: auto;
+  margin-right: 4px;
+}
+
+.btn-remove-leg {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background var(--transition);
+}
+
+.btn-remove-leg:hover {
+  background: var(--danger-light);
+}
+
+.leg-body {
+  padding: 12px;
+}
+
+.leg-fields.hidden {
+  display: none;
+}
+
+.leg-receipt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  flex-wrap: wrap;
+}
+
+.receipt-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.leg-receipt-file {
+  font-size: 0.8rem;
+}
+
+.receipt-name {
+  font-size: 0.8rem;
+  color: var(--success);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-remove-receipt {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-remove-receipt.hidden {
+  display: none;
+}
+
+.legs-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.rate-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.rate-row label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.rate-input {
+  width: 80px;
+  padding: 6px 8px;
+  font-size: 0.875rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: right;
+}
+
+.rate-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .leg-header {
+    flex-wrap: wrap;
+  }
+
+  .leg-type-select {
+    max-width: 140px;
+  }
+
+  .rate-row {
+    margin-left: 0;
+    margin-top: 4px;
   }
 }

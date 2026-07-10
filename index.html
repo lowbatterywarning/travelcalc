@@ -11,39 +11,35 @@
   <div class="container">
     <header class="header">
       <h1>&#x2708;&#xFE0F; Travel Allowance Calculator</h1>
-      <p class="subtitle">Estimate trip costs using real road distances and GSA per diem rates</p>
+      <p class="subtitle">Estimate trip costs with transportation, lodging, and meals</p>
     </header>
 
     <main>
-      <!-- Form Card -->
-      <section class="card" id="formCard">
-        <h2 class="card-title">Trip Details</h2>
-        <form id="tripForm" novalidate>
-          <!-- Starting Location -->
-          <fieldset class="address-section">
-            <legend class="address-legend">Starting Location</legend>
-            <div class="form-row form-row-address">
-              <div class="form-group">
-                <label for="startZip">Zip Code <span class="required">*</span></label>
-                <input type="text" id="startZip" placeholder="90210" maxlength="10" autocomplete="off">
-              </div>
-            </div>
-            <span class="error-msg" id="startAddrError"></span>
-          </fieldset>
+      <form id="tripForm" novalidate>
 
-          <!-- Destination Location -->
-          <fieldset class="address-section">
-            <legend class="address-legend">Destination Location</legend>
-            <div class="form-row form-row-address">
-              <div class="form-group">
-                <label for="endZip">Zip Code <span class="required">*</span></label>
-                <input type="text" id="endZip" placeholder="10001" maxlength="10" autocomplete="off">
-              </div>
+        <!-- Transportation Section -->
+        <section class="card" id="transportCard">
+          <h2 class="card-title">Transportation</h2>
+          <div id="legsContainer"></div>
+          <div class="legs-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="addLegBtn">+ Add Leg</button>
+            <div class="rate-row">
+              <label for="ratePerMile">Rate per mile ($):</label>
+              <input type="number" id="ratePerMile" value="0.725" min="0.01" step="0.001" class="rate-input">
             </div>
-            <span class="error-msg" id="endAddrError"></span>
-          </fieldset>
+          </div>
+          <span class="error-msg" id="legsError"></span>
+        </section>
 
+        <!-- Per Diem Section -->
+        <section class="card" id="perDiemCard">
+          <h2 class="card-title">Per Diem</h2>
           <div class="form-row form-row-three">
+            <div class="form-group">
+              <label for="destZip">Destination Zip <span class="required">*</span></label>
+              <input type="text" id="destZip" placeholder="10001" maxlength="10" autocomplete="off">
+              <span class="error-msg" id="destZipError"></span>
+            </div>
             <div class="form-group">
               <label for="startDate">Start Date <span class="required">*</span></label>
               <input type="date" id="startDate">
@@ -54,56 +50,37 @@
               <input type="date" id="endDate">
               <span class="error-msg" id="endDateError"></span>
             </div>
-            <div class="form-group">
-              <label for="ratePerMile">Rate per Mile ($)</label>
-              <input type="number" id="ratePerMile" value="0.725" min="0.01" step="0.001">
-              <span class="error-msg" id="rateError"></span>
-            </div>
           </div>
+        </section>
 
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary" id="calculateBtn">
-              <span class="btn-text">Calculate</span>
-              <span class="spinner hidden" id="btnSpinner"></span>
-            </button>
-          </div>
-        </form>
-
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="calculateBtn">
+            <span class="btn-text">Calculate</span>
+            <span class="spinner hidden" id="btnSpinner"></span>
+          </button>
+        </div>
         <div class="global-error hidden" id="globalError"></div>
-      </section>
+      </form>
 
-      <!-- Results Section (hidden until calculation) -->
+      <!-- Results -->
       <section class="results hidden" id="resultsSection">
-        <!-- Trip Summary -->
         <div class="card" id="summaryCard">
           <h2 class="card-title">Trip Summary</h2>
           <div class="summary-grid" id="summaryGrid"></div>
           <div class="disclaimer-notes" id="disclaimerNotes"></div>
         </div>
-
-        <!-- Cost Breakdown -->
         <div class="card" id="costCard">
           <h2 class="card-title">Cost Breakdown</h2>
           <div class="cost-table" id="costTable"></div>
         </div>
-
-        <!-- Route Map -->
         <div class="card" id="mapCard">
           <h2 class="card-title">Route Map</h2>
           <div id="map"></div>
         </div>
-
-        <!-- Action Buttons -->
         <div class="results-actions">
-          <button class="btn btn-primary" id="downloadPdfBtn">
-            &#x1F4E5; Download PDF Report
-          </button>
-          <button class="btn btn-outline" id="emailResultsBtn">
-            &#x2709;&#xFE0F; Email Results
-          </button>
-          <button class="btn btn-secondary" id="newCalcBtn">
-            &#x1F504; New Calculation
-          </button>
+          <button class="btn btn-primary" id="downloadPdfBtn">&#x1F4E5; Download PDF Report</button>
+          <button class="btn btn-outline" id="emailResultsBtn">&#x2709;&#xFE0F; Email Results</button>
+          <button class="btn btn-secondary" id="newCalcBtn">&#x1F504; New Calculation</button>
         </div>
         <div class="email-form hidden" id="emailForm">
           <div class="email-row">
@@ -120,6 +97,69 @@
       <p>Powered by OpenStreetMap, OSRM, and GSA FY2026 per diem rates. For estimation purposes only.</p>
     </footer>
   </div>
+
+  <!-- Hidden leg template -->
+  <template id="legTemplate">
+    <div class="leg-card" draggable="true">
+      <div class="leg-header">
+        <span class="drag-handle" title="Drag to reorder">&#x2630;</span>
+        <select class="leg-type-select">
+          <option value="personal_car">Personal Car</option>
+          <option value="rental_car">Rental Car</option>
+          <option value="flight">Flight</option>
+          <option value="taxi">Taxi / Rideshare</option>
+        </select>
+        <span class="leg-number"></span>
+        <button type="button" class="btn-remove-leg" title="Remove leg">&#x2715;</button>
+      </div>
+      <div class="leg-body">
+        <!-- Personal Car fields -->
+        <div class="leg-fields leg-fields-personal_car">
+          <div class="form-row">
+            <div class="form-group"><label>From Zip</label><input type="text" class="leg-from-zip" placeholder="90210" maxlength="10"></div>
+            <div class="form-group"><label>To Zip</label><input type="text" class="leg-to-zip" placeholder="10001" maxlength="10"></div>
+          </div>
+        </div>
+        <!-- Rental Car fields -->
+        <div class="leg-fields leg-fields-rental_car hidden">
+          <div class="form-row">
+            <div class="form-group"><label>From Zip</label><input type="text" class="leg-from-zip" placeholder="90210" maxlength="10"></div>
+            <div class="form-group"><label>To Zip</label><input type="text" class="leg-to-zip" placeholder="10001" maxlength="10"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Daily Rate ($)</label><input type="number" class="leg-daily-rate" placeholder="45" min="0" step="0.01"></div>
+            <div class="form-group"><label>Days</label><input type="number" class="leg-rental-days" placeholder="5" min="1" step="1"></div>
+          </div>
+        </div>
+        <!-- Flight fields -->
+        <div class="leg-fields leg-fields-flight hidden">
+          <div class="form-row">
+            <div class="form-group"><label>Departure City</label><input type="text" class="leg-dep-city" placeholder="Los Angeles"></div>
+            <div class="form-group"><label>Arrival City</label><input type="text" class="leg-arr-city" placeholder="New York"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Airline</label><input type="text" class="leg-airline" placeholder="Delta"></div>
+            <div class="form-group"><label>Cost ($)</label><input type="number" class="leg-cost" placeholder="450" min="0" step="0.01"></div>
+          </div>
+        </div>
+        <!-- Taxi fields -->
+        <div class="leg-fields leg-fields-taxi hidden">
+          <div class="form-row">
+            <div class="form-group"><label>From</label><input type="text" class="leg-from" placeholder="Airport"></div>
+            <div class="form-group"><label>To</label><input type="text" class="leg-to" placeholder="Hotel"></div>
+          </div>
+          <div class="form-group"><label>Cost ($)</label><input type="number" class="leg-cost" placeholder="65" min="0" step="0.01"></div>
+        </div>
+        <!-- Receipt (all types) -->
+        <div class="leg-receipt">
+          <label class="receipt-label">Receipt (optional)</label>
+          <input type="file" class="leg-receipt-file" accept=".pdf,.jpg,.jpeg,.png,.gif">
+          <span class="receipt-name"></span>
+          <button type="button" class="btn-remove-receipt hidden">&#x2715;</button>
+        </div>
+      </div>
+    </div>
+  </template>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin=""></script>
