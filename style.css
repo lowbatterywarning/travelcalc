@@ -304,11 +304,11 @@ body {
 
 .summary-item {
   padding: 12px 0;
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
 }
 
-.summary-item:nth-last-child(-n+2) {
-  border-bottom: none;
+.summary-item:nth-child(-n+2) {
+  border-top: none;
 }
 
 .summary-label {
@@ -519,12 +519,12 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .summary-item:nth-last-child(-n+2) {
-    border-bottom: 1px solid var(--border);
+  .summary-item:nth-child(-n+2) {
+    border-top: 1px solid var(--border);
   }
 
-  .summary-item:last-child {
-    border-bottom: none;
+  .summary-item:first-child {
+    border-top: none;
   }
 
   .results-actions {

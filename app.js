@@ -13,7 +13,7 @@
   var startDate = $("startDate");
   var endDate = $("endDate");
   var calculateBtn = $("calculateBtn");
-  var btnText = calculateBtn.querySelector(".btn-text");
+  var btnText = calculateBtn ? calculateBtn.querySelector(".btn-text") : null;
   var btnSpinner = $("btnSpinner");
   var globalError = $("globalError");
   var resultsSection = $("resultsSection");
@@ -77,6 +77,7 @@
     typeSelect.addEventListener("change", function () {
       var newType = typeSelect.value;
       updateLegFields(card, newType);
+      syncDestZipFromLeg();
     });
 
     // Remove handler
@@ -118,6 +119,7 @@
 
     legsContainer.appendChild(card);
     updateAllLegNumbers();
+    syncDestZipFromLeg();
     return id;
   }
 
@@ -163,12 +165,24 @@
     var card = legsContainer.querySelector('[data-leg-id="' + id + '"]');
     if (card) { card.remove(); }
     updateAllLegNumbers();
+    syncDestZipFromLeg();
   }
 
   function updateAllLegNumbers() {
     var cards = legsContainer.querySelectorAll(".leg-card");
     for (var i = 0; i < cards.length; i++) {
       cards[i].querySelector(".leg-number").textContent = "Leg " + (i + 1);
+    }
+  }
+
+  function syncDestZipFromLeg() {
+    var cards = legsContainer.querySelectorAll(".leg-card");
+    if (cards.length !== 1) { return; }
+    var type = cards[0].querySelector(".leg-type-select").value;
+    if (type !== "personal_car" && type !== "rental_car") { return; }
+    var toZipEl = cards[0].querySelector(".leg-to-zip");
+    if (toZipEl && toZipEl.value.trim()) {
+      destZip.value = toZipEl.value.trim();
     }
   }
 
@@ -263,13 +277,13 @@
 
   // ==================== Helpers ====================
   function showSpinner() {
-    btnText.classList.add("hidden");
+    if (btnText) { btnText.classList.add("hidden"); }
     btnSpinner.classList.remove("hidden");
     calculateBtn.disabled = true;
   }
 
   function hideSpinner() {
-    btnText.classList.remove("hidden");
+    if (btnText) { btnText.classList.remove("hidden"); }
     btnSpinner.classList.add("hidden");
     calculateBtn.disabled = false;
   }
@@ -285,10 +299,12 @@
   }
 
   function formatCurrency(v) {
+    if (typeof v !== "number" || isNaN(v)) { return "$0.00"; }
     return "$" + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
   function formatDistance(miles) {
+    if (typeof miles !== "number" || isNaN(miles)) { return "0.0 mi"; }
     return miles.toFixed(1) + " mi";
   }
 
@@ -299,11 +315,14 @@
     return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
   }
 
-  function escapeHtml(str) {
-    var div = document.createElement("div");
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
-  }
+  var escapeHtml = (function () {
+    var escapeMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" };
+    var re = /[&<>"']/g;
+    return function (str) {
+      if (!str) { return ""; }
+      return String(str).replace(re, function (ch) { return escapeMap[ch]; });
+    };
+  })();
 
   function delay(ms) {
     return new Promise(function (resolve) { setTimeout(resolve, ms); });
@@ -312,6 +331,14 @@
   // ==================== Form Validation ====================
   function validateForm() {
     hideGlobalError();
+    clearFieldErrors();
+
+    var rateVal = parseFloat(ratePerMile.value);
+    if (isNaN(rateVal) || rateVal <= 0) {
+      legsError.textContent = "Enter a valid mileage rate greater than $0.";
+      legsError.classList.add("visible");
+      return false;
+    }
 
     var cards = legsContainer.querySelectorAll(".leg-card");
     if (cards.length === 0) {
@@ -503,6 +530,14 @@
     var d = new Date(Date.UTC(parseInt(sP[0], 10), parseInt(sP[1], 10) - 1, parseInt(sP[2], 10)));
     var ed = new Date(Date.UTC(parseInt(eP[0], 10), parseInt(eP[1], 10) - 1, parseInt(eP[2], 10)));
 
+    // Guard: if any day falls beyond the data's fiscal year (ends Sep 30 of fyYear),
+    // fall back to standard rates for the entire trip
+    var fyEndYear = data.fiscalYear || 2026;
+    var fyEnd = new Date(Date.UTC(fyEndYear, 9, 1)); // Oct 1 = start of next FY
+    if (ed >= fyEnd) {
+      return getStandardRate(zip);
+    }
+
     var totalLodging = 0, dayCount = 0, ratesUsed = {};
     while (d <= ed) {
       var calMonth = d.getUTCMonth();
@@ -517,13 +552,16 @@
     var avgLodging = Math.round(totalLodging / dayCount);
     var rateNote = Object.keys(ratesUsed).length > 1 ? " (varies by month)" : "";
 
+    // GSA rule: first and last travel day M&IE at 75%
+    var totalMeals = mealsRate * (dayCount === 1 ? 0.75 : dayCount - 0.5);
+
     return {
       lodging: avgLodging,
       meals: mealsRate,
       dailyRate: avgLodging + mealsRate,
       totalLodging: totalLodging,
-      totalMeals: mealsRate * dayCount,
-      totalPerDiem: totalLodging + (mealsRate * dayCount),
+      totalMeals: totalMeals,
+      totalPerDiem: totalLodging + totalMeals,
       locationName: dest.name + ", " + (dest.state || ""),
       isStandard: false,
       rateNote: rateNote
@@ -551,6 +589,17 @@
     state.isHaversine = false;
     state.haversineNote = "";
 
+    // Ensure per-diem data is loaded before proceeding
+    loadPerDiemData().then(function () {
+      return doCalculation();
+    }).catch(function (err) {
+      hideSpinner();
+      console.error(err);
+      showGlobalError("Error: " + (err.message || "Calculation failed. Check zip codes and try again."));
+    });
+  }
+
+  function doCalculation() {
     var legs = collectLegData();
     var carLegs = [];
     for (var i = 0; i < legs.length; i++) {
@@ -565,7 +614,7 @@
       state.destZipGeo = geo;
     });
 
-    // Geocode all car leg zips sequentially with delays
+    // Geocode all car leg zips sequentially with a delay between each to avoid rate limiting
     var carGeoPromise = Promise.resolve();
     var geoCache = {};
     carLegs.forEach(function (leg) {
@@ -576,14 +625,15 @@
         }
         if (!geoCache[leg.toZip]) {
           p.push(delay(1100).then(function () { return geocodeZip(leg.toZip); }).then(function (g) { geoCache[leg.toZip] = g; }));
-        } else {
-          p.push(Promise.resolve());
         }
-        return Promise.all(p);
+        if (p.length > 0) {
+          return Promise.all(p).then(function () { return delay(1100); });
+        }
+        return delay(1100);
       });
     });
 
-    Promise.all([destGeoPromise, carGeoPromise])
+    return Promise.all([destGeoPromise, carGeoPromise])
       .then(function () {
         // Calculate distances for all car legs
         var routePromises = [];
@@ -642,7 +692,8 @@
         // Fallback per-diem costs if not pre-calculated
         if (!state.perDiemCost) {
           state.lodgingCost = state.perDiemLodging * state.days;
-          state.mealsCost = state.perDiemMeals * state.days;
+          // GSA rule: first and last travel day M&IE at 75%
+          state.mealsCost = state.perDiemMeals * (state.days === 1 ? 0.75 : state.days - 0.5);
           state.perDiemCost = state.lodgingCost + state.mealsCost;
         }
 
@@ -744,7 +795,7 @@
       + "<span class=\"cost-value\">" + formatCurrency(state.lodgingCost) + "</span>"
       + "</div>";
     rows += "<div class=\"cost-row\">"
-      + "<span class=\"cost-label\">Meals Cost (" + state.days + " day" + (state.days !== 1 ? "s" : "") + " \u00D7 " + formatCurrency(state.perDiemMeals) + ")</span>"
+      + "<span class=\"cost-label\">Meals Cost (" + state.days + " day" + (state.days !== 1 ? "s" : "") + ", 75% on travel days)</span>"
       + "<span class=\"cost-value\">" + formatCurrency(state.mealsCost) + "</span>"
       + "</div>";
     rows += "<div class=\"cost-row cost-subtotal\">"
@@ -804,7 +855,12 @@
       map.fitBounds(L.latLngBounds(allCoords), { padding: [40, 40] });
     }
     state.mapInstance = map;
-    setTimeout(function () { map.invalidateSize(); }, 100);
+    // Defer invalidateSize until the layout has settled
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        map.invalidateSize();
+      });
+    });
   }
 
   // ==================== PDF Generation ====================
@@ -823,7 +879,7 @@
       doc.setFontSize(9); doc.setTextColor(100, 116, 139);
       doc.text("Generated: " + new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), margin, y); y += 10;
       doc.setDrawColor(37, 99, 235); doc.setLineWidth(0.5);
-      doc.line(margin, y, pageWidth - margin, y); y += 8;
+      doc.line(margin, y, pageWidth - margin, y); y += 10;
 
       // Trip Details
       doc.setFontSize(12); doc.setTextColor(30, 41, 59); doc.text("Trip Details", margin, y); y += 7;
@@ -831,7 +887,7 @@
       var details = [
         ["Dates:", formatDate(startDate.value) + " to " + formatDate(endDate.value)],
         ["Duration:", state.days + " day" + (state.days !== 1 ? "s" : "")],
-        ["Destination:", state.destZipGeo ? state.destZipGeo.displayName : destZip.value],
+        ["Destination:", state.destZipGeo ? state.destZipGeo.displayName : (destZip.value || "N/A")],
         ["Lodging Rate:", formatCurrency(state.perDiemLodging) + "/day"],
         ["Meals Rate:", formatCurrency(state.perDiemMeals) + "/day"]
       ];
@@ -841,7 +897,7 @@
         var w = doc.splitTextToSize(details[d][1], pageWidth - col2X);
         doc.text(w, col2X, y); y += lineH * Math.max(1, w.length);
       }
-      y += 4;
+      y += 6;
 
       // Cost Breakdown
       doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.3);
@@ -852,30 +908,33 @@
       // Transportation legs
       for (var j = 0; j < state.legs.length; j++) {
         var leg = state.legs[j];
+        var pdfLabel = leg.costLabel.replace(/\u2192/g, "->");
         doc.setFont(undefined, "normal");
-        doc.text(leg.costLabel + ":", col1X, y);
+        doc.text(pdfLabel + ":", col1X, y);
         doc.text(formatCurrency(leg.totalCost), col2X, y); y += lineH + 1;
       }
+      y += 2;
       doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.2);
-      doc.line(margin, y - 2, pageWidth - margin, y - 2);
+      doc.line(margin, y, pageWidth - margin, y); y += 4;
       doc.setFont(undefined, "bold");
       doc.text("Transportation Subtotal:", col1X, y);
       doc.text(formatCurrency(state.transportationTotal), col2X, y); y += lineH + 3;
 
       // Per diem
       doc.setFont(undefined, "normal");
-      doc.text("Lodging Cost (" + state.days + "d):", col1X, y);
+      doc.text("Lodging Cost (" + state.days + " day" + (state.days !== 1 ? "s" : "") + "):", col1X, y);
       doc.text(formatCurrency(state.lodgingCost), col2X, y); y += lineH + 1;
-      doc.text("Meals Cost (" + state.days + "d):", col1X, y);
+      doc.text("Meals Cost (" + state.days + " day" + (state.days !== 1 ? "s" : "") + "):", col1X, y);
       doc.text(formatCurrency(state.mealsCost), col2X, y); y += lineH + 1;
+      y += 2;
       doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.2);
-      doc.line(margin, y - 2, pageWidth - margin, y - 2);
+      doc.line(margin, y, pageWidth - margin, y); y += 4;
       doc.setFont(undefined, "bold");
       doc.text("Per Diem Subtotal:", col1X, y);
       doc.text(formatCurrency(state.perDiemCost), col2X, y); y += lineH + 3;
 
       // Total
-      y += 2;
+      y += 4;
       doc.setDrawColor(37, 99, 235); doc.setLineWidth(0.5);
       doc.line(margin, y, pageWidth - margin, y); y += 7;
       doc.setFontSize(13); doc.setTextColor(37, 99, 235); doc.setFont(undefined, "bold");
@@ -912,7 +971,11 @@
           doc.addImage(mapImg, "PNG", margin, y, mw, mh); y += mh + 10;
           finishPDF(doc, y, onComplete);
         };
-        mapImg.onerror = function () { finishPDF(doc, y, onComplete); };
+        mapImg.onerror = function () {
+          doc.setFontSize(9); doc.setTextColor(148, 163, 184); doc.setFont(undefined, "italic");
+          doc.text("(Route map unavailable)", margin, y);
+          finishPDF(doc, y + 6, onComplete);
+        };
         mapImg.src = mapUrl;
         return;
       }
@@ -941,59 +1004,78 @@
   }
 
   // ==================== Email ====================
-  var EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY";
-  var EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
-  var EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
+  var EMAILJS_PUBLIC_KEY = "G_plCuyI5GtqvIaCw";
+  var EMAILJS_SERVICE_ID = "service_3pg4h95";
+  var EMAILJS_TEMPLATE_ID = "template_jhibair";
+
+  var emailSending = false;
 
   sendEmailBtn.addEventListener("click", function () {
+    if (emailSending) { return; }
     var toAddr = emailToAddr.value.trim();
     if (!toAddr || toAddr.indexOf("@") === -1) {
       emailStatus.textContent = "Enter a valid email address.";
       emailStatus.className = "email-status error"; return;
     }
+    emailSending = true;
     sendEmailBtn.disabled = true; sendEmailBtn.textContent = "Sending...";
     emailStatus.textContent = ""; emailStatus.className = "email-status";
 
-    var bodyLines = ["TRIP COST REPORT", ""];
-    for (var i = 0; i < state.legs.length; i++) {
-      bodyLines.push(state.legs[i].costLabel + ": " + formatCurrency(state.legs[i].totalCost));
-    }
-    bodyLines.push("Transportation Subtotal: " + formatCurrency(state.transportationTotal));
-    bodyLines.push("");
-    bodyLines.push("Lodging (" + state.days + "d): " + formatCurrency(state.lodgingCost));
-    bodyLines.push("Meals (" + state.days + "d): " + formatCurrency(state.mealsCost));
-    bodyLines.push("Per Diem Subtotal: " + formatCurrency(state.perDiemCost));
-    bodyLines.push("");
-    bodyLines.push("TOTAL: " + formatCurrency(state.totalCost));
-    bodyLines.push("");
-    bodyLines.push("--- Generated by Travel Allowance Calculator ---");
-
+    var dest = state.destZipGeo ? state.destZipGeo.displayName : (destZip.value || "N/A");
     var subject = "Trip Cost Report - " + destZip.value;
 
-    generatePDF(function (pdfBlob) {
-      var reader = new FileReader();
-      reader.onload = function () {
-        var base64 = reader.result.split(",")[1];
-        emailjs.init(EMAILJS_PUBLIC_KEY);
-        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          to_email: toAddr, subject: subject,
-          message: bodyLines.join("\n"), file: base64, filename: "trip-report.pdf"
-        }).then(function () {
-          emailStatus.textContent = "Report sent to " + toAddr + "!";
-          emailStatus.className = "email-status success";
-          sendEmailBtn.disabled = false; sendEmailBtn.textContent = "Send";
-          emailToAddr.value = "";
-        }).catch(function (err) {
-          emailStatus.textContent = "Failed: " + (err.text || err.message || "Check EmailJS setup.");
-          emailStatus.className = "email-status error";
-          sendEmailBtn.disabled = false; sendEmailBtn.textContent = "Send";
-        });
-      };
-      reader.readAsDataURL(pdfBlob);
+    // Build styled HTML email body
+    var rowsHtml = "";
+    for (var i = 0; i < state.legs.length; i++) {
+      var l = state.legs[i];
+      rowsHtml += "<tr><td style='padding:6px 0;border-bottom:1px solid #eee'>" + escapeHtml(l.costLabel) + "</td>"
+        + "<td style='padding:6px 0;text-align:right;border-bottom:1px solid #eee;font-weight:600'>" + formatCurrency(l.totalCost) + "</td></tr>";
+    }
+    rowsHtml += "<tr><td style='padding:6px 0;font-weight:700'>Transportation Subtotal</td>"
+      + "<td style='padding:6px 0;text-align:right;font-weight:700'>" + formatCurrency(state.transportationTotal) + "</td></tr>";
+    rowsHtml += "<tr><td colspan='2' style='padding:8px 0 0'><hr style='border:none;border-top:1px solid #ddd'></td></tr>";
+    rowsHtml += "<tr><td style='padding:6px 0'>Lodging (" + state.days + "d &times; " + formatCurrency(state.perDiemLodging) + ")</td>"
+      + "<td style='padding:6px 0;text-align:right;font-weight:600'>" + formatCurrency(state.lodgingCost) + "</td></tr>";
+    rowsHtml += "<tr><td style='padding:6px 0;border-bottom:1px solid #eee'>Meals (" + state.days + "d, 75% on travel days)</td>"
+      + "<td style='padding:6px 0;text-align:right;font-weight:600;border-bottom:1px solid #eee'>" + formatCurrency(state.mealsCost) + "</td></tr>";
+    rowsHtml += "<tr><td style='padding:6px 0;font-weight:700'>Per Diem Subtotal</td>"
+      + "<td style='padding:6px 0;text-align:right;font-weight:700'>" + formatCurrency(state.perDiemCost) + "</td></tr>";
+    rowsHtml += "<tr><td colspan='2' style='padding:10px 0 0'><hr style='border:none;border-top:2px solid #2563eb'></td></tr>";
+    rowsHtml += "<tr><td style='padding:8px 0;font-size:17px;font-weight:700;color:#2563eb'>Total Estimated Cost</td>"
+      + "<td style='padding:8px 0;text-align:right;font-size:20px;font-weight:700;color:#2563eb'>" + formatCurrency(state.totalCost) + "</td></tr>";
+
+    var messageHtml =
+      "<div style='max-width:560px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;color:#1e293b'>"
+      + "<h1 style='font-size:22px;color:#2563eb;margin:0 0 4px'>&#x2708;&#xFE0F; Trip Cost Report</h1>"
+      + "<p style='font-size:13px;color:#64748b;margin:0 0 20px'>" + formatDate(startDate.value) + " &ndash; " + formatDate(endDate.value) + " &middot; " + escapeHtml(dest) + " &middot; " + state.days + " day" + (state.days !== 1 ? "s" : "") + "</p>"
+      + "<table style='width:100%;border-collapse:collapse;font-size:14px'>" + rowsHtml + "</table>"
+      + "<p style='font-size:11px;color:#94a3b8;margin:24px 0 0;font-style:italic'>GSA FY2026 per diem rates. For estimation purposes only. &mdash; Travel Allowance Calculator</p>"
+      + "</div>";
+
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: toAddr, subject: subject, message: messageHtml
+    }).then(function () {
+      emailStatus.textContent = "Report sent to " + toAddr + "!";
+      emailStatus.className = "email-status success";
+      sendEmailBtn.disabled = false; sendEmailBtn.textContent = "Send";
+      emailToAddr.value = "";
+      emailSending = false;
+    }).catch(function (err) {
+      emailStatus.textContent = "Failed: " + (err.text || err.message || "Check EmailJS setup.");
+      emailStatus.className = "email-status error";
+      sendEmailBtn.disabled = false; sendEmailBtn.textContent = "Send";
+      emailSending = false;
     });
   });
 
   // ==================== Event Listeners ====================
+  legsContainer.addEventListener("input", function (e) {
+    if (e.target.classList.contains("leg-to-zip")) {
+      syncDestZipFromLeg();
+    }
+  });
+
   addLegBtn.addEventListener("click", function () {
     try { createLeg("personal_car"); } catch (e) { console.error("Add leg failed:", e); }
   });
@@ -1028,7 +1110,6 @@
     };
     legsContainer.innerHTML = "";
     form.reset();
-    ratePerMile.value = "0.725";
     clearFieldErrors();
     hideGlobalError();
     legsError.textContent = "";
@@ -1036,13 +1117,11 @@
     resultsSection.classList.add("hidden");
     emailForm.classList.add("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
+    emailSending = false;
     if (legTemplate) { try { createLeg("personal_car"); } catch (e) { console.error(e); } }
   }
 
   // ==================== Initialize ====================
-  var today = new Date().toISOString().split("T")[0];
-  startDate.setAttribute("min", today);
-  endDate.setAttribute("min", today);
   loadPerDiemData();
 
   if (!legTemplate) {
