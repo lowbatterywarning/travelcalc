@@ -551,9 +551,7 @@
 
     var avgLodging = Math.round(totalLodging / dayCount);
     var rateNote = Object.keys(ratesUsed).length > 1 ? " (varies by month)" : "";
-
-    // GSA rule: first and last travel day M&IE at 75%
-    var totalMeals = mealsRate * (dayCount === 1 ? 0.75 : dayCount - 0.5);
+    var totalMeals = mealsRate * dayCount;
 
     return {
       lodging: avgLodging,
@@ -692,8 +690,7 @@
         // Fallback per-diem costs if not pre-calculated
         if (!state.perDiemCost) {
           state.lodgingCost = state.perDiemLodging * state.days;
-          // GSA rule: first and last travel day M&IE at 75%
-          state.mealsCost = state.perDiemMeals * (state.days === 1 ? 0.75 : state.days - 0.5);
+          state.mealsCost = state.perDiemMeals * state.days;
           state.perDiemCost = state.lodgingCost + state.mealsCost;
         }
 
@@ -795,7 +792,7 @@
       + "<span class=\"cost-value\">" + formatCurrency(state.lodgingCost) + "</span>"
       + "</div>";
     rows += "<div class=\"cost-row\">"
-      + "<span class=\"cost-label\">Meals Cost (" + state.days + " day" + (state.days !== 1 ? "s" : "") + ", 75% on travel days)</span>"
+      + "<span class=\"cost-label\">Meals Cost (" + state.days + " day" + (state.days !== 1 ? "s" : "") + " \u00D7 " + formatCurrency(state.perDiemMeals) + ")</span>"
       + "<span class=\"cost-value\">" + formatCurrency(state.mealsCost) + "</span>"
       + "</div>";
     rows += "<div class=\"cost-row cost-subtotal\">"
@@ -1036,7 +1033,7 @@
     rowsHtml += "<tr><td colspan='2' style='padding:8px 0 0'><hr style='border:none;border-top:1px solid #ddd'></td></tr>";
     rowsHtml += "<tr><td style='padding:6px 0'>Lodging (" + state.days + "d &times; " + formatCurrency(state.perDiemLodging) + ")</td>"
       + "<td style='padding:6px 0;text-align:right;font-weight:600'>" + formatCurrency(state.lodgingCost) + "</td></tr>";
-    rowsHtml += "<tr><td style='padding:6px 0;border-bottom:1px solid #eee'>Meals (" + state.days + "d, 75% on travel days)</td>"
+    rowsHtml += "<tr><td style='padding:6px 0;border-bottom:1px solid #eee'>Meals (" + state.days + "d &times; " + formatCurrency(state.perDiemMeals) + ")</td>"
       + "<td style='padding:6px 0;text-align:right;font-weight:600;border-bottom:1px solid #eee'>" + formatCurrency(state.mealsCost) + "</td></tr>";
     rowsHtml += "<tr><td style='padding:6px 0;font-weight:700'>Per Diem Subtotal</td>"
       + "<td style='padding:6px 0;text-align:right;font-weight:700'>" + formatCurrency(state.perDiemCost) + "</td></tr>";
