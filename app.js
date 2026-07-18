@@ -938,43 +938,31 @@
       doc.text("Total Estimated Cost:", col1X, y);
       doc.text(formatCurrency(state.totalCost), col2X, y); y += 10;
 
-      // Map
+      // Map — route summary (text-based, no external image dependency)
       var firstCarForMap = null;
       for (var k = 0; k < state.legs.length; k++) {
         var l = state.legs[k];
         if ((l.type === "personal_car" || l.type === "rental_car") && l.fromGeo && l.toGeo) { firstCarForMap = l; break; }
       }
       if (firstCarForMap) {
-        var zoom = 5;
-        var distMiles = firstCarForMap.distanceMiles || 500;
-        if (distMiles < 5) zoom = 12; else if (distMiles < 20) zoom = 10;
-        else if (distMiles < 75) zoom = 8; else if (distMiles < 250) zoom = 6;
-        else if (distMiles < 800) zoom = 5; else if (distMiles < 2000) zoom = 4;
-
-        var clat = (firstCarForMap.fromGeo.lat + firstCarForMap.toGeo.lat) / 2;
-        var clon = (firstCarForMap.fromGeo.lon + firstCarForMap.toGeo.lon) / 2;
-        var mapUrl = "https://staticmap.openstreetmap.de/staticmap.php"
-          + "?center=" + clat.toFixed(5) + "," + clon.toFixed(5)
-          + "&zoom=" + zoom + "&size=800x400"
-          + "&markers=" + firstCarForMap.fromGeo.lat.toFixed(5) + "," + firstCarForMap.fromGeo.lon.toFixed(5) + ",ol-marker"
-          + "|" + firstCarForMap.toGeo.lat.toFixed(5) + "," + firstCarForMap.toGeo.lon.toFixed(5) + ",ol-marker";
-
-        var mapImg = new Image(); mapImg.crossOrigin = "anonymous";
-        mapImg.onload = function () {
-          var mw = pageWidth - margin * 2, mh = (mapImg.naturalHeight / mapImg.naturalWidth) * mw;
-          if (y + mh + 25 > doc.internal.pageSize.getHeight()) { doc.addPage(); y = margin; }
-          doc.setFontSize(10); doc.setTextColor(30, 41, 59); doc.setFont(undefined, "bold");
-          doc.text("Route Map", margin, y); y += 6;
-          doc.addImage(mapImg, "PNG", margin, y, mw, mh); y += mh + 10;
-          finishPDF(doc, y, onComplete);
-        };
-        mapImg.onerror = function () {
-          doc.setFontSize(9); doc.setTextColor(148, 163, 184); doc.setFont(undefined, "italic");
-          doc.text("(Route map unavailable)", margin, y);
-          finishPDF(doc, y + 6, onComplete);
-        };
-        mapImg.src = mapUrl;
-        return;
+        if (y + 30 > doc.internal.pageSize.getHeight()) { doc.addPage(); y = margin; }
+        y += 4;
+        doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
+        doc.line(margin, y, pageWidth - margin, y); y += 8;
+        doc.setFontSize(10); doc.setTextColor(30, 41, 59); doc.setFont(undefined, "bold");
+        doc.text("Route Summary", margin, y); y += 7;
+        doc.setFontSize(9); doc.setTextColor(30, 41, 59); doc.setFont(undefined, "normal");
+        var routeLabel = (firstCarForMap.fromGeo.displayName || firstCarForMap.fromZip)
+          + "  ->  " + (firstCarForMap.toGeo.displayName || firstCarForMap.toZip);
+        var splitRoute = doc.splitTextToSize(routeLabel, pageWidth - margin * 2);
+        doc.text(splitRoute, margin, y); y += lineH * Math.max(1, splitRoute.length);
+        if (firstCarForMap.distanceMiles) {
+          doc.text("Distance: " + formatDistance(firstCarForMap.distanceMiles) + "  (driving)", margin, y); y += lineH;
+        }
+        if (state.isHaversine) {
+          doc.setFontSize(8); doc.setTextColor(148, 163, 184); doc.setFont(undefined, "italic");
+          doc.text("* Straight-line distances used for some legs", margin, y); y += lineH;
+        }
       }
       finishPDF(doc, y, onComplete);
     } catch (e) {
